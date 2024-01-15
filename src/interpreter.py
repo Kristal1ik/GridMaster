@@ -40,17 +40,17 @@ class Actions:
     @staticmethod
     def call(interpreter, funcName):
         currentFunction = interpreter.functions[funcName]
-        for action in currentFunction:
-            interpreter.next(action[0], action[1])
+        for action in currentFunction.code:
+            interpreter.next(action[0], *action[1:])
 
     @staticmethod
     def repeat(interpreter, cycle):
         if len(cycle) == 0:
             raise Exception(f"Конец цикла без начала")
         coords = []
-        for i in range(cycle.top()[1]):
-            for j in range(cycle.top[0], interpreter.currentLine):
-                coords.extend(interpreter.next(interpreter.code[j][0], interpreter.code[j][1]))
+        for i in range(cycle[-1][0]):
+            for j in range(cycle[-1][0], interpreter.currentLine):
+                coords.extend(interpreter.next(interpreter.code[j][0], *interpreter.code[j][1:]))
         return coords
 
 
@@ -79,7 +79,8 @@ class Interpreter:
             if self.currentProcName == "":
                 self.currentProcName = args[0]
             if token != "ENDPROC":
-                self.currentProc.append((token, [args]))
+                self.currentProc.append((token, *args))
+                return [[self.x, self.y]]
             else:
                 self.saveProc = False
                 self.functions[self.currentProcName] = Function(self.currentProcName, self.currentProc)
@@ -111,7 +112,8 @@ class Interpreter:
                 if type(self.get_value(args[1])) != int:
                     raise Exception(
                         f"""Неверный тип аргумента 'значение' ожидается int, найдено"
-                {type(args[0])} на строке {self.currentLine}!""")
+                {type(args[1])} на строке {self.currentLine}!""")
+
                 self.variables[args[0]] = self.get_value(args[1])
             case "PROCEDURE":
                 self.saveProc = True
@@ -125,12 +127,16 @@ class Interpreter:
             case _:
                 raise Exception(f"Неизвестный токе {token} на строке {self.currentLine}!")
         self.currentLine += 1
-        self.code.append((token, [args]))
+        self.code.append((token, *args))
         return [[self.x, self.y]]
 
     def get_value(self, val):
+        try:
+            val = int(val)
+        except Exception as e:
+            pass
         if type(val) == int:
             return val
-        if val in self.variables:
+        if val not in self.variables:
             raise Exception(f"Использование необъявленной переменной {val} на {self.currentLine}")
         return self.variables[val]
