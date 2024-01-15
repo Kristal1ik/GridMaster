@@ -1,16 +1,18 @@
 import pygame
+from PyQt5 import QtWidgets
 from pygame.locals import QUIT, USEREVENT, MOUSEBUTTONDOWN
 from pygame.event import Event, post
 
-from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel, QPushButton
-from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QImage, QPainter, QPixmap
+from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel, QPushButton, QFrame
+from PyQt5.QtCore import QTimer, QRect
+from PyQt5.QtGui import QImage, QPainter, QPixmap, QColor
 
 
 class Constants:
     w = 1600
     h = 900
     peach = (255, 228, 196)
+    white = (0, 0, 0)
 
 
 class Game():
@@ -36,11 +38,31 @@ class GameWidget(QWidget):
         grid.setColumnStretch(0, 5)
         grid.setColumnStretch(1, 1)
         self.game = Game()
+
+        button_open_local = QtWidgets.QPushButton(self)
+        button_open_local.setText("Открыть локально")
+        button_open_local.setGeometry(5, 5, 200, 40)
+
+        button_save_local = QtWidgets.QPushButton(self)
+        button_save_local.setText("Сохранить локально")
+        button_save_local.setGeometry(210, 5, 200, 40)
+
+        button_open_db = QtWidgets.QPushButton(self)
+        button_open_db.setText("Открыть из бд")
+        button_open_db.setGeometry(420, 5, 200, 40)
+
+        button_save_db = QtWidgets.QPushButton(self)
+        button_save_db.setText("Открыть из бд")
+        button_save_db.setGeometry(630, 5, 200, 40)
+
         self.timer = QTimer()
         self.timer.timeout.connect(self.pygame_loop)
         self.timer.start(40)
 
+        self.rect()
+
     def pygame_loop(self):
+        print("fdgfdg")
         self.game.loop()
         self.update(Constants.w // 2 + 150, Constants.h // 2 - 150, Constants.w, Constants.h)
 
@@ -50,6 +72,11 @@ class GameWidget(QWidget):
             img = QImage(buf, Constants.w, Constants.h, QImage.Format_RGB32)
             p = QPainter(self)
             p.drawImage(Constants.w // 2 + 150, Constants.h // 2 - 150, img)
+
+            painter = QPainter(self)
+            painter.setPen(QColor(255, 228, 196))
+            painter.setBrush(QColor(255, 228, 196))
+            painter.drawRect(0, 0, Constants.w, 50)
 
     def mousePressEvent(self, e):
         x, y = e.pos().x(), e.pos().y()
