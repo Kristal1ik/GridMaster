@@ -72,7 +72,7 @@ class Interpreter:
     def next(self, token, *args):
         if not self.ifTrue:
             if token != "ENDIF":
-                return self.x, self.y
+                return [[self.x, self.y]]
             else:
                 self.ifTrue = True
         if self.saveProc:
