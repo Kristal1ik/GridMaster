@@ -3,7 +3,7 @@ from PyQt5 import QtWidgets
 from pygame.locals import QUIT, USEREVENT, MOUSEBUTTONDOWN
 from pygame.event import Event, post
 
-from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel, QPushButton, QFrame
+from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel, QPushButton, QFrame, QTextEdit, QHBoxLayout
 from PyQt5.QtCore import QTimer, QRect
 from PyQt5.QtGui import QImage, QPainter, QPixmap, QColor
 
@@ -33,6 +33,7 @@ class Game():
 class GameWidget(QWidget):
     def __init__(self, game=None, parent=None):
         super().__init__()
+        # self.initUI()
         grid = QGridLayout(self)
         grid.setContentsMargins(1, 1, 1, 1)
         grid.setColumnStretch(0, 5)
@@ -52,17 +53,64 @@ class GameWidget(QWidget):
         button_open_db.setGeometry(420, 5, 200, 40)
 
         button_save_db = QtWidgets.QPushButton(self)
-        button_save_db.setText("Открыть из бд")
+        button_save_db.setText("Сохранить бд")
         button_save_db.setGeometry(630, 5, 200, 40)
+
+        button_start = QtWidgets.QPushButton(self)
+        button_start.setText("Старт")
+        button_start.setGeometry(Constants.w - 220, 5, 100, 40)
+
+        button_stop = QtWidgets.QPushButton(self)
+        button_stop.setText("Стоп")
+        button_stop.setGeometry(Constants.w - 110, 5, 100, 40)
+
+        button_open_local.clicked.connect(self.button_open_local_click)
+        button_save_local.clicked.connect(self.button_save_local_click)
+        button_open_db.clicked.connect(self.button_open_db_click)
+        button_save_db.clicked.connect(self.button_save_db_click)
+        button_start.clicked.connect(self.button_start_click)
+        button_stop.clicked.connect(self.button_stop_click)
+
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.pygame_loop)
         self.timer.start(40)
 
+        self.textEdit1 = QTextEdit(self)
+        self.textEdit1.setGeometry(0, 50, Constants.w // 2 + 150, Constants.h - 50)
+
         self.rect()
 
+    def button_open_local_click(self):
+        print("button_open_local")
+
+    def button_save_local_click(self):
+        print("button_save_local")
+
+    def button_open_db_click(self):
+        print("button_open_db")
+
+    def button_save_db_click(self):
+        print("button_save_db")
+
+    def button_start_click(self):
+        print("button_start")
+
+    def button_stop_click(self):
+        print("button_stop")
+
+    # def initUI(self):
+    #     hbox = QHBoxLayout(self)
+    #     pixmap = QPixmap("play.png")
+    #     lbl = QLabel(self)
+    #     lbl.setPixmap(pixmap)
+    #     hbox.addWidget(lbl)
+    #     self.setLayout(hbox)
+    #     self.move(100, 200)
+    #     print("dd")
+    #     self.show()
+
     def pygame_loop(self):
-        print("fdgfdg")
         self.game.loop()
         self.update(Constants.w // 2 + 150, Constants.h // 2 - 150, Constants.w, Constants.h)
 
@@ -77,10 +125,6 @@ class GameWidget(QWidget):
             painter.setPen(QColor(255, 228, 196))
             painter.setBrush(QColor(255, 228, 196))
             painter.drawRect(0, 0, Constants.w, 50)
-
-    def mousePressEvent(self, e):
-        x, y = e.pos().x(), e.pos().y()
-        post(Event(MOUSEBUTTONDOWN, {'pos': (x, y)}))
 
     def closeEvent(self, e):
         QWidget.closeEvent(self, e)
