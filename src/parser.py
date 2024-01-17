@@ -2,8 +2,8 @@ import re
 from interpreter import Interpreter
 
 
-def parser():
-    with open("test.txt", "r") as file:
+def parser(filename):
+    with open(filename, "r") as file:
         file = file.read().splitlines()
     lst = []
     for i in file:
