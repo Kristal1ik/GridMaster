@@ -9,10 +9,12 @@ from PyQt5.QtGui import QImage, QPainter, QPixmap, QColor
 from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox
 from src.parser import parser
 
+
 class Constants:
     w = 1600
     h = 900
     peach = (255, 228, 196)
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -29,12 +31,16 @@ class Ui_Form(object):
         self.retranslateUi(Form)
 
         QMetaObject.connectSlotsByName(Form)
+
     # setupUi
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
-        self.deleteFilmButton.setText(QCoreApplication.translate("Form", u"\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0444\u0430\u0439\u043b", None))
+        self.deleteFilmButton.setText(
+            QCoreApplication.translate("Form", u"\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0444\u0430\u0439\u043b",
+                                       None))
     # retranslateUi
+
 
 class DB(QDialog, Ui_Form):  # Вот тут основное окно
     def __init__(self):
@@ -111,6 +117,43 @@ class DB(QDialog, Ui_Form):  # Вот тут основное окно
 
     def exit(self):
         self.close()
+
+
+class Ui_Form_SaveDB(object):
+    def setupUi(self, Form):
+        if not Form.objectName():
+            Form.setObjectName(u"Form")
+        Form.resize(600, 100)
+        Form.setWindowTitle("Введите название файла")
+        self.saveButton = QPushButton(Form)
+        self.saveButton.setObjectName(u"deleteFilmButton")
+        self.saveButton.setGeometry(QRect(10, 50, 580, 40))
+
+        self.input = QTextEdit(self)
+        self.input.setGeometry(10, 10, 580, 30)
+
+        self.retranslateUi(Form)
+
+        QMetaObject.connectSlotsByName(Form)
+
+    # setupUi
+
+    def retranslateUi(self, Form):
+        Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
+        self.saveButton.setText("Сохранить в БД")
+    # retranslateUi
+
+
+class SaveDB(QDialog, Ui_Form_SaveDB):  # Вот тут основное окно
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+        self.dialogs = []
+        # self.exitAction.triggered.connect(self.exit)
+
+    def exit(self):
+        self.close()
+
 
 class Game():
     def __init__(self):
@@ -238,7 +281,7 @@ class GameWidget(QMainWindow):
         self.button_open_db.setGeometry(420, 5, 200, 40)
 
         self.button_save_db = QtWidgets.QPushButton(self)
-        self.button_save_db.setText("Сохранить бд")
+        self.button_save_db.setText("Сохранить в бд")
         self.button_save_db.setGeometry(630, 5, 200, 40)
 
         self.button_start = QtWidgets.QPushButton(self)
@@ -294,29 +337,33 @@ class GameWidget(QMainWindow):
     def button_open_db_click(self):
         print("button_open_db")
         self.window2 = DB()
+        self.window2.setWindowTitle("Выберите файл из БД")
         self.window2.show()
 
     def button_save_db_click(self):
         print("button_save_db")
-
-        connection = pymysql.connect(
-            host='185.221.213.34',
-            port=3306,
-            user='predprof',
-            password='Xz28]~w&V$weNQ%',
-            database='interpret',
-            cursorclass=pymysql.cursors.DictCursor
-        )
-        a = self.textEdit1.toPlainText().strip()
-
-        with connection.cursor() as cursor:
-            insert_query = f'''INSERT INTO `data`(`file`, `time`, `txt`) VALUES ({'[value-1]'},{'[value-2]'},{'[value-3]'});'''
-            cursor.execute(insert_query)
-            connection.commit()
-            print('добавлено')
-
-        connection.close()
-        cursor.close()
+        self.window2 = SaveDB()
+        self.window2.setWindowTitle("Введите название файла")
+        self.window2.show()
+        #
+        # connection = pymysql.connect(
+        #     host='185.221.213.34',
+        #     port=3306,
+        #     user='predprof',
+        #     password='Xz28]~w&V$weNQ%',
+        #     database='interpret',
+        #     cursorclass=pymysql.cursors.DictCursor
+        # )
+        # a = self.textEdit1.toPlainText().strip()
+        #
+        # with connection.cursor() as cursor:
+        #     insert_query = f'''INSERT INTO `data`(`file`, `time`, `txt`) VALUES ({'[value-1]'},{'[value-2]'},{'[value-3]'});'''
+        #     cursor.execute(insert_query)
+        #     connection.commit()
+        #     print('добавлено')
+        #
+        # connection.close()
+        # cursor.close()
 
     def button_start_click(self):
         print("button_start")
