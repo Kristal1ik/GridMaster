@@ -1,4 +1,4 @@
-SET X = 5
+SET X = 2
 REPEAT X
     RIGHT 5
 ENDREPEAT
