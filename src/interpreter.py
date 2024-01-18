@@ -92,9 +92,10 @@ class Interpreter:
             self.code.append([line[0], *line[1:]])
         self.code.append(["ENDPROG"])
         self.code.append(["ENDPROG"])
-        print(self.code)
-        print(self.ifMap)
-        print(self.funcMap)
+        if __name__ == "__main__":
+            print(self.code)
+            print(self.ifMap)
+            print(self.funcMap)
         return True
 
     def next(self):
@@ -135,12 +136,20 @@ class Interpreter:
                         self.currentLine += 1
                     self.currentLine += 1
                     return self.next()
-                self.stack.append(["STARTFOR", self.currentLine, val])
+                self.stack.append(["STARTFOR", self.currentLine + 1, val - 1])
+                self.currentLine += 1
+                return self.next()
                 pass
             case "ENDREPEAT":
                 if self.stack[-1][0] != "STARTFOR":
                     raise Exception(f"ENDREPEAT без соответствующего REPEAT")
-                self.currentLine += 1
+                top = self.stack.pop()
+                if top[2] > 0:
+                    top[2] -= 1
+                    self.currentLine = top[1]
+                    self.stack.append(top)
+                else:
+                    self.currentLine += 1
                 return self.next()
                 pass
             case "SET":
@@ -162,7 +171,7 @@ class Interpreter:
                     raise Exception(f"ENDPROC без соответствующего PROCEDURE")
                 self.currentLine = self.stack[-1][1]
                 self.stack.pop()
-                self.next()
+                return self.next()
             case "CALL":
                 if args[0] not in self.funcMap:
                     raise Exception(f"Использование необъявленной функции {args[0]} на строке {self.currentLine}")
@@ -191,7 +200,7 @@ class Interpreter:
 if __name__ == "__main__":
     interpret = Interpreter()
     interpret.load(
-        [["RIGHT", 10], ["IF", "RIGHT"], ["LEFT", 10], ["ENDIF"], ["PROCEDURE", "TEST"], ["RIGHT", 2], ["ENDPROC"],
-         ["CALL", "TEST"]])
-    for i in range(5):
+        [["SET", "X", 0], ["RIGHT", 10], ["IF", "RIGHT"], ["LEFT", 10], ["ENDIF"], ["PROCEDURE", "TEST"], ["RIGHT", 2], ["UP", 2], ["ENDPROC"],
+         ["REPEAT", "X"], ["CALL", "TEST"], ["ENDREPEAT"]])
+    for i in range(15):
         print(interpret.next())
