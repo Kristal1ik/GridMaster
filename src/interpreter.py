@@ -24,18 +24,19 @@ class Actions:
         match direction:
             case "RIGHT":
                 if interpreter.x != 10:
-                    interpreter.ifTrue = False
+                    return False
             case "LEFT":
                 if interpreter.x != -10:
-                    interpreter.ifTrue = False
+                    return False
             case "UP":
                 if interpreter.y != 10:
-                    interpreter.ifTrue = False
+                    return False
             case "DOWN":
                 if interpreter.y != -10:
-                    interpreter.ifTrue = False
+                    return False
             case _:
                 raise Exception(f"Неизвестное направление {direction}")
+        return True
 
     @staticmethod
     def call(interpreter, funcName):
@@ -68,23 +69,37 @@ class Interpreter:
         self.saveProc = False
         self.currentProc = []
         self.currentProcName = ""
+        self.ifMap = dict()
+        self.funcMap = dict()
+        self.stack = []
 
-    def next(self, token, *args):
-        if not self.ifTrue:
-            if token != "ENDIF":
-                return [[self.x, self.y]]
-            else:
-                self.ifTrue = True
-        if self.saveProc:
-            if self.currentProcName == "":
-                self.currentProcName = args[0]
-            if token != "ENDPROC":
-                self.currentProc.append((token, *args))
-                return [[self.x, self.y]]
-            else:
-                self.saveProc = False
-                self.functions[self.currentProcName] = Function(self.currentProcName, self.currentProc)
+    def load(self, lines):
+        ifStart = [False, 0]
+        endChecker = []
+        for idx, line in enumerate(lines):
+            if line[0] == "PROCEDURE":
+                if ifStart[0]:
+                    raise Exception(f"Объявление процедуры внутри блока IF")
+                self.funcMap[line[1]] = idx
+            if line[0] == "IF":
+                ifStart = [True, idx]
+            if line[0] == "ENDIF":
+                if not ifStart[0]:
+                    raise Exception(f"ENDIF без IF на строке {idx}")
+                self.ifMap[ifStart[1]] = idx
+                ifStart = [False, 0]
 
+            self.code.append([line[0], *line[1:]])
+        self.code.append(["ENDPROG"])
+        self.code.append(["ENDPROG"])
+        print(self.code)
+        print(self.ifMap)
+        print(self.funcMap)
+        return True
+
+    def next(self):
+        token = self.code[self.currentLine][0]
+        args = self.code[self.currentLine][1:]
         match token:
             case "RIGHT" | "LEFT" | "UP" | "DOWN":
                 if type(self.get_value(args[0])) != int:
@@ -94,19 +109,39 @@ class Interpreter:
                 Actions.move(self, token, self.get_value(args[0]))
                 if self.x < -10 or self.x > 10 or self.y < -10 or self.y > 10:
                     raise Exception("Исполнитель вышел за пределы поля!")
-            case "IFBLOCK":
-                Actions.checkIf(self, args[0])
+            case "IF":
+                if not Actions.checkIf(self, args[0]):
+                    self.currentLine = self.ifMap[self.currentLine]
+                    self.currentLine += 1
+                else:
+                    self.currentLine += 1
+                    self.stack.append(["IFSTART", self.currentLine])
+                return self.next()
             case "ENDIF":
-                pass
+                if self.stack[-1][0] != "IFSTART":
+                    raise Exception(f"ENDIF без соответствующего IF")
+                self.stack.pop()
+                self.currentLine += 1
+                return self.next()
             case "REPEAT":
-                if type(self.get_value(args[0])) != int:
+                val = self.get_value(args[0])
+                if type(val) != int:
                     raise Exception(
                         f"""Неверный аргумент 'количество итерраций', найдено"
                 {type(args[0])} на строке {self.currentLine}!""")
-                self.cycles.append([self.currentLine, self.get_value(args[0])])
+                if val == 0:
+
+                    while self.code[self.currentLine][0] != "ENDREPEAT" and self.code[self.currentLine][0] != "ENDPROG":
+                        self.currentLine += 1
+                    self.currentLine += 1
+                    return self.next()
+                self.stack.append(["STARTFOR", self.currentLine, val])
                 pass
             case "ENDREPEAT":
-                Actions.repeat(self, self.cycles)
+                if self.stack[-1][0] != "STARTFOR":
+                    raise Exception(f"ENDREPEAT без соответствующего REPEAT")
+                self.currentLine += 1
+                return self.next()
                 pass
             case "SET":
                 if type(self.get_value(args[1])) != int:
@@ -115,19 +150,30 @@ class Interpreter:
                 {type(args[1])} на строке {self.currentLine}!""")
 
                 self.variables[args[0]] = self.get_value(args[1])
+                self.currentLine += 1
+                return self.next()
             case "PROCEDURE":
-                self.saveProc = True
-                self.currentProcName = args[0]
+                while self.code[self.currentLine][0] != "ENDPROC" and self.code[self.currentLine][0] != "ENDPROG":
+                    self.currentLine += 1
+                self.currentLine += 1
+                return self.next()
             case "ENDPROC":
-                self.saveProc = False
+                if self.stack[-1][0] != "STARTPROC":
+                    raise Exception(f"ENDPROC без соответствующего PROCEDURE")
+                self.currentLine = self.stack[-1][1]
+                self.stack.pop()
+                self.next()
             case "CALL":
-                if args[0] not in self.functions:
+                if args[0] not in self.funcMap:
                     raise Exception(f"Использование необъявленной функции {args[0]} на строке {self.currentLine}")
-                Actions.call(self, args[0])
+                self.stack.append(["STARTPROC", self.currentLine + 1])
+                self.currentLine = self.funcMap[args[0]] + 1
+                return self.next()
+            case "ENDPROG":
+                return None
             case _:
-                raise Exception(f"Неизвестный токе {token} на строке {self.currentLine}!")
+                raise Exception(f"Неизвестный токен {token} на строке {self.currentLine}!")
         self.currentLine += 1
-        self.code.append((token, *args))
         return [[self.x, self.y]]
 
     def get_value(self, val):
@@ -140,3 +186,12 @@ class Interpreter:
         if val not in self.variables:
             raise Exception(f"Использование необъявленной переменной {val} на {self.currentLine}")
         return self.variables[val]
+
+
+if __name__ == "__main__":
+    interpret = Interpreter()
+    interpret.load(
+        [["RIGHT", 10], ["IF", "RIGHT"], ["LEFT", 10], ["ENDIF"], ["PROCEDURE", "TEST"], ["RIGHT", 2], ["ENDPROC"],
+         ["CALL", "TEST"]])
+    for i in range(5):
+        print(interpret.next())
