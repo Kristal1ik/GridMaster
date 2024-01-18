@@ -183,7 +183,7 @@ class Interpreter:
             case _:
                 raise Exception(f"Неизвестный токен {token} на строке {self.currentLine}!")
         self.currentLine += 1
-        return [[self.x, self.y]]
+        return [self.x, self.y]
 
     def get_value(self, val):
         try:
