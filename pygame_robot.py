@@ -1,12 +1,12 @@
 import pygame
 from PyQt5 import QtWidgets
-from pygame.locals import QUIT, USEREVENT, MOUSEBUTTONDOWN
-from pygame.event import Event, post
 
-from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel, QPushButton, QFrame, QTextEdit
+from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel, QPushButton, QFrame, QTextEdit, QFileDialog, \
+    QMessageBox
 from PyQt5.QtCore import QTimer, QRect
 from PyQt5.QtGui import QImage, QPainter, QPixmap, QColor
 
+from src.parser import parser
 
 class Constants:
     w = 1600
@@ -34,8 +34,7 @@ class Game():
         self.left = 6
         self.top = 6
         self.cell_size = 28
-        self.coords1 = [[0, 6], [7, 6], [7, 2], [10, 2], [10, -1], [-6, -1], [-6, 3], [-4, 3], [-4, 1], [-5, 1], [-5, 0],
-                   [0, 0]]
+        self.coords1 = parser('temp.txt')
         self.coords2 = []
 
         for i in self.coords1:
@@ -127,36 +126,36 @@ class GameWidget(QWidget):
         grid.setColumnStretch(1, 1)
         self.game = Game()
 
-        button_open_local = QtWidgets.QPushButton(self)
-        button_open_local.setText("Открыть локально")
-        button_open_local.setGeometry(5, 5, 200, 40)
+        self.button_open_local = QtWidgets.QPushButton(self)
+        self.button_open_local.setText("Открыть локально")
+        self.button_open_local.setGeometry(5, 5, 200, 40)
 
-        button_save_local = QtWidgets.QPushButton(self)
-        button_save_local.setText("Сохранить локально")
-        button_save_local.setGeometry(210, 5, 200, 40)
+        self.button_save_local = QtWidgets.QPushButton(self)
+        self.button_save_local.setText("Сохранить локально")
+        self.button_save_local.setGeometry(210, 5, 200, 40)
 
-        button_open_db = QtWidgets.QPushButton(self)
-        button_open_db.setText("Открыть из бд")
-        button_open_db.setGeometry(420, 5, 200, 40)
+        self.button_open_db = QtWidgets.QPushButton(self)
+        self.button_open_db.setText("Открыть из бд")
+        self.button_open_db.setGeometry(420, 5, 200, 40)
 
-        button_save_db = QtWidgets.QPushButton(self)
-        button_save_db.setText("Сохранить бд")
-        button_save_db.setGeometry(630, 5, 200, 40)
+        self.button_save_db = QtWidgets.QPushButton(self)
+        self.button_save_db.setText("Сохранить бд")
+        self.button_save_db.setGeometry(630, 5, 200, 40)
 
-        button_start = QtWidgets.QPushButton(self)
-        button_start.setText("Старт")
-        button_start.setGeometry(Constants.w - 220 - 50, 5, 100, 40)
+        self.button_start = QtWidgets.QPushButton(self)
+        self.button_start.setText("Старт")
+        self.button_start.setGeometry(Constants.w - 220 - 50, 5, 100, 40)
 
-        button_stop = QtWidgets.QPushButton(self)
-        button_stop.setText("Стоп")
-        button_stop.setGeometry(Constants.w - 110 - 50, 5, 100, 40)
+        self.button_stop = QtWidgets.QPushButton(self)
+        self.button_stop.setText("Стоп")
+        self.button_stop.setGeometry(Constants.w - 110 - 50, 5, 100, 40)
 
-        button_open_local.clicked.connect(self.button_open_local_click)
-        button_save_local.clicked.connect(self.button_save_local_click)
-        button_open_db.clicked.connect(self.button_open_db_click)
-        button_save_db.clicked.connect(self.button_save_db_click)
-        button_start.clicked.connect(self.button_start_click)
-        button_stop.clicked.connect(self.button_stop_click)
+        self.button_open_local.clicked.connect(self.button_open_local_click)
+        self.button_save_local.clicked.connect(self.button_save_local_click)
+        self.button_open_db.clicked.connect(self.button_open_db_click)
+        self.button_save_db.clicked.connect(self.button_save_db_click)
+        self.button_start.clicked.connect(self.button_start_click)
+        self.button_stop.clicked.connect(self.button_stop_click)
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.pygame_loop)
@@ -169,25 +168,52 @@ class GameWidget(QWidget):
 
     def button_open_local_click(self):
         print("button_open_local")
+        filename, filetype = QFileDialog.getOpenFileName(self,
+                                                         "Выбрать файл",
+                                                         ".",
+                                                         "Text Files(*.txt)")
+        print(filename)
+
+        with open(filename, encoding='utf8') as f:
+            self.textEdit1.setPlainText(''.join(f.readlines()))
 
     def button_save_local_click(self):
         print("button_save_local")
+        filename, ok = QFileDialog.getSaveFileName(self,
+                                                   "Сохранить файл",
+                                                   ".",
+                                                   "Text Files(*.txt)")
+
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("Файл <br><b>{}</b> <br> успешно сохранён!".format(filename.split('/')[-1]))
+        msg.setWindowTitle("Уведомление")
+        msg.exec_()
+
+        print(filename)
 
     def button_open_db_click(self):
         print("button_open_db")
+        # app = QApplication(sys.argv)
+        # form = Main()
+        # form.show()
+        # sys.exit(app.exec_())
 
     def button_save_db_click(self):
         print("button_save_db")
 
     def button_start_click(self):
         print("button_start")
-        self.start()
+        a = self.textEdit1.toPlainText().strip()
+        print(a)
+        with open('temp.txt', 'wt', encoding='utf8') as f:
+            print(self.textEdit1.toPlainText().strip(), file=f)
 
+        self.start()
 
     def button_stop_click(self):
         print("button_stop")
         self.stop()
-
 
     def pygame_loop(self):
         # print("fdgfdg")
