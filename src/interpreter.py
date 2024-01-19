@@ -75,12 +75,19 @@ class Interpreter:
 
     def load(self, lines):
         ifStart = [False, 0]
+        procStart = False
+        repeatStart = False
         endChecker = []
         for idx, line in enumerate(lines):
             if line[0] == "PROCEDURE":
                 if ifStart[0]:
                     raise Exception(f"Объявление процедуры внутри блока IF")
+                if repeatStart:
+                    raise Exception(f"Объявление процедуры внутри блока REPEAT")
                 self.funcMap[line[1]] = idx
+                procStart = True
+            if line[0] == "ENDPROC":
+                procStart = False
             if line[0] == "IF":
                 ifStart = [True, idx]
             if line[0] == "ENDIF":
@@ -88,10 +95,16 @@ class Interpreter:
                     raise Exception(f"ENDIF без IF на строке {idx}")
                 self.ifMap[ifStart[1]] = idx
                 ifStart = [False, 0]
+            if line[0] == "REAPEAT":
+                repeatStart = True
+            if line[0] == "ENDREPEAT":
+                repeatStart = False
 
             self.code.append([line[0], *line[1:]])
         self.code.append(["ENDPROG"])
         self.code.append(["ENDPROG"])
+        if ifStart[0] or procStart or repeatStart:
+            raise Exception(f"Незакрытый блок IF, PROCEDURE или REPEAT")
         if __name__ == "__main__":
             print(self.code)
             print(self.ifMap)
@@ -200,7 +213,8 @@ class Interpreter:
 if __name__ == "__main__":
     interpret = Interpreter()
     interpret.load(
-        [["SET", "X", 0], ["RIGHT", 10], ["IF", "RIGHT"], ["LEFT", 10], ["ENDIF"], ["PROCEDURE", "TEST"], ["RIGHT", 2], ["UP", 2], ["ENDPROC"],
+        [["SET", "X", 0], ["RIGHT", 10], ["IF", "RIGHT"], ["LEFT", 10], ["ENDIF"], ["PROCEDURE", "TEST"], ["RIGHT", 2],
+         ["UP", 2], ["ENDPROC"],
          ["REPEAT", "X"], ["CALL", "TEST"], ["ENDREPEAT"]])
     for i in range(15):
         print(interpret.next())
