@@ -11,9 +11,11 @@ from PyQt5.QtGui import QImage, QPainter, QPixmap, QColor
 from PyQt5 import QtGui, QtCore
 
 from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox
+
 from src.parser import parser
 a = ''
 skript = ''
+ERROR = False
 class Constants:
     w = 1600
     h = 900
@@ -217,6 +219,7 @@ class DB(QDialog, Ui_Form):  # Вот тут основное окно
 
 class Game():
     def __init__(self):
+        global ERROR
         pygame.init()
         pygame.display.set_mode((1, 1))  # хак
         self.screen = pygame.Surface((Constants.w, Constants.h), pygame.HIDDEN)
@@ -237,12 +240,24 @@ class Game():
         self.cell_size = 28
 
         try:
-            self.coords1 = parser('temp.txt')
+            temp = parser('temp.txt')
+            self.coords1 = temp[1]
+            if temp[0] is not None:
+                ERROR = temp[0]
+            else:
+                ERROR = None
         except FileNotFoundError:
             with open('temp.txt', 'wt', encoding='utf8') as f:
                 print('', file=f)
-            self.coords1 = parser('temp.txt')
-        
+            self.coords1 = parser('temp.txt')[1]
+
+        except Exception as e:
+            print(e)
+            ERROR = e
+            with open('temp.txt', 'wt', encoding='utf8') as f:
+                print('', file=f)
+            self.coords1 = parser('temp.txt')[1]
+
         self.coords2 = []
 
         for i in self.coords1:
@@ -275,6 +290,7 @@ class Game():
                                (self.cell_size // 2 - 2), 20)
 
     def render(self, coords=[], run=False):
+        global ERROR
         if self.coords == []:
             self.coords = coords
         if not self.run:
@@ -293,6 +309,7 @@ class Game():
                            (self.cell_size // 2 - 2), 20)
 
         if self.run:
+            self.flag = True
             print(self.coords)
             try:
                 if self.coords[0] != [self.x, self.y]:
@@ -304,6 +321,13 @@ class Game():
 
             if len(self.coords) == 0:
                 self.run = False
+        else:
+            if self.flag and ERROR is not None:
+                if str(ERROR) == 'list index out of range':
+                    ERROR = 'Обнаружены синтаксические ошибки'
+                print(ERROR, 7)
+                self.flag = False
+                w.error()
 
     def loop(self):
         # print(9)
@@ -369,7 +393,7 @@ class GameWidget(QMainWindow):
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.pygame_loop)
-        self.timer.start(20)
+        self.timer.start(1)
 
         self.textEdit1 = QTextEdit(self)
         self.textEdit1.setGeometry(0, 50, Constants.w // 2 + 150, Constants.h - 50)
@@ -404,6 +428,14 @@ class GameWidget(QMainWindow):
 
     def set_skript(self):
         self.textEdit1.setPlainText(''.join(skript))
+
+    def error(self):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText(str(ERROR))
+        msg.setWindowTitle("Ошибка!")
+        msg.exec_()
+        self.stop()
 
     def button_open_db_click(self):
         print("button_open_db")
