@@ -1,3 +1,5 @@
+import datetime
+
 import pygame
 import pymysql
 from PyQt5 import QtWidgets
@@ -8,115 +10,12 @@ from PyQt5.QtCore import QTimer, QRect, QCoreApplication, QMetaObject
 from PyQt5.QtGui import QImage, QPainter, QPixmap, QColor
 from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox
 from src.parser import parser
-
-
+a = ''
+skript = ''
 class Constants:
     w = 1600
     h = 900
     peach = (255, 228, 196)
-
-
-class Ui_Form(object):
-    def setupUi(self, Form):
-        if not Form.objectName():
-            Form.setObjectName(u"Form")
-        Form.resize(669, 385)
-        self.deleteFilmButton = QPushButton(Form)
-        self.deleteFilmButton.setObjectName(u"deleteFilmButton")
-        self.deleteFilmButton.setGeometry(QRect(10, 330, 651, 51))
-        self.filmsTable = QTableWidget(Form)
-        self.filmsTable.setObjectName(u"filmsTable")
-        self.filmsTable.setGeometry(QRect(10, 0, 651, 321))
-
-        self.retranslateUi(Form)
-
-        QMetaObject.connectSlotsByName(Form)
-
-    # setupUi
-
-    def retranslateUi(self, Form):
-        Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
-        self.deleteFilmButton.setText(
-            QCoreApplication.translate("Form", u"\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0444\u0430\u0439\u043b",
-                                       None))
-    # retranslateUi
-
-
-class DB(QDialog, Ui_Form):  # Вот тут основное окно
-    def __init__(self):
-        super().__init__()
-        self.setupUi(self)
-        self.up_f()
-        self.deleteFilmButton.clicked.connect(self.df)
-        self.dialogs = []
-        # self.exitAction.triggered.connect(self.exit)
-
-    def up_f(self):
-        result = []
-        connection = pymysql.connect(
-            host='185.221.213.34',
-            port=3306,
-            user='predprof',
-            password='Xz28]~w&V$weNQ%',
-            database='interpret',
-            cursorclass=pymysql.cursors.DictCursor
-        )
-
-        with connection.cursor() as cursor:
-            select_all_rows = "SELECT * FROM `data`"
-            cursor.execute(select_all_rows)
-            res = cursor.fetchall()
-        connection.close()
-        cursor.close()
-
-        for i in res:
-            res = list(i.values())
-            result.append(res[:-1])
-        print(result)
-
-        self.filmsTable.setRowCount(len(result))
-        self.filmsTable.setColumnCount(len(result[0]))
-        self.filmsTable.setHorizontalHeaderLabels(
-            ['Название файла', 'Дата сохранения'])
-
-        for i, elem in enumerate(result):
-            for j, val in enumerate(elem):
-                self.filmsTable.setItem(i, j, QTableWidgetItem(str(val)))
-
-    def df(self):
-        rows = list(set([i.row() for i in self.filmsTable.selectedItems()]))
-        ids = [self.filmsTable.item(i, 0).text() for i in rows]
-        if not ids:
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Warning)
-            msg.setText("Выберите что-нибудь!")
-            msg.setWindowTitle("Уведомление")
-            msg.exec_()
-            return
-
-        else:
-            connection = pymysql.connect(
-                host='185.221.213.34',
-                port=3306,
-                user='predprof',
-                password='Xz28]~w&V$weNQ%',
-                database='interpret',
-                cursorclass=pymysql.cursors.DictCursor
-            )
-            print(int(''.join(ids)))
-
-            with connection.cursor() as cursor:
-                insert_query = f'''DELETE FROM `data` WHERE id = "{int(''.join(ids))}";'''
-                cursor.execute(insert_query)
-                connection.commit()
-                print('удалена')
-
-            connection.close()
-            cursor.close()
-            self.up_f()
-
-    def exit(self):
-        self.close()
 
 
 class Ui_Form_SaveDB(object):
@@ -141,7 +40,44 @@ class Ui_Form_SaveDB(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.saveButton.setText("Сохранить в БД")
-    # retranslateUi
+        self.saveButton.clicked.connect(self.saveButtonDB)
+
+    def saveButtonDB(self):
+        print(self.input.toPlainText())
+        try:
+            connection = pymysql.connect(
+                host='185.221.213.34',
+                port=3306,
+                user='predprof',
+                password='Xz28]~w&V$weNQ%',
+                database='interpret',
+                cursorclass=pymysql.cursors.DictCursor
+            )
+            print(a)
+
+            with connection.cursor() as cursor:
+                insert_query = f'''INSERT INTO `data`(`file`, `time`, `txt`) VALUES ('{self.input.toPlainText()}','{datetime.datetime.now().strftime("%d.%m.%Y %H:%M")}','{a}');'''
+                cursor.execute(insert_query)
+                connection.commit()
+                print('добавлено')
+
+            connection.close()
+            cursor.close()
+        except:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Проверьте интернет соединение!")
+            msg.setWindowTitle("Ошибка подключения к БД")
+            msg.exec_()
+
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("Файл <br><b>{}</b> <br> успешно сохранён!".format(self.input.toPlainText()))
+        msg.setWindowTitle("Уведомление")
+        msg.exec_()
+
+        self.close()
+
 
 
 class SaveDB(QDialog, Ui_Form_SaveDB):  # Вот тут основное окно
@@ -150,6 +86,128 @@ class SaveDB(QDialog, Ui_Form_SaveDB):  # Вот тут основное окн�
         self.setupUi(self)
         self.dialogs = []
         # self.exitAction.triggered.connect(self.exit)
+
+class Ui_Form(object):
+    def setupUi(self, Form):
+        if not Form.objectName():
+            Form.setObjectName(u"Form")
+        Form.resize(669, 385)
+        self.deleteFilmButton = QPushButton(Form)
+        self.deleteFilmButton.setObjectName(u"deleteFilmButton")
+        self.deleteFilmButton.setGeometry(QRect(10, 330, 651, 51))
+        self.filmsTable = QTableWidget(Form)
+        self.filmsTable.setObjectName(u"filmsTable")
+        self.filmsTable.setGeometry(QRect(10, 0, 651, 321))
+
+        self.retranslateUi(Form)
+
+        QMetaObject.connectSlotsByName(Form)
+    # setupUi
+
+    def retranslateUi(self, Form):
+        Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
+        self.deleteFilmButton.setText(QCoreApplication.translate("Form", u"\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0444\u0430\u0439\u043b", None))
+    # retranslateUi
+
+class DB(QDialog, Ui_Form):  # Вот тут основное окно
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+        self.up_f()
+        self.deleteFilmButton.clicked.connect(self.df)
+        self.dialogs = []
+        # self.exitAction.triggered.connect(self.exit)
+
+    def up_f(self):
+        try:
+            result = []
+            connection = pymysql.connect(
+                host='185.221.213.34',
+                port=3306,
+                user='predprof',
+                password='Xz28]~w&V$weNQ%',
+                database='interpret',
+                cursorclass=pymysql.cursors.DictCursor
+            )
+
+            with connection.cursor() as cursor:
+                select_all_rows = "SELECT * FROM `data`"
+                cursor.execute(select_all_rows)
+                res = cursor.fetchall()
+            connection.close()
+            cursor.close()
+        except:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Проверьте интернет соединение!")
+            msg.setWindowTitle("Ошибка подключения к БД")
+            msg.exec_()
+
+        for i in res:
+            res = list(i.values())
+            result.append(res[:-1])
+        print(result)
+
+        self.filmsTable.setRowCount(len(result))
+        self.filmsTable.setColumnCount(len(result[0]))
+        self.filmsTable.setHorizontalHeaderLabels(
+            ['Название файла', 'Дата сохранения'])
+
+        for i, elem in enumerate(result):
+            for j, val in enumerate(elem):
+                self.filmsTable.setItem(i, j, QTableWidgetItem(str(val)))
+
+    def df(self):
+        global skript
+        rows = list(set([i.row() for i in self.filmsTable.selectedItems()]))
+        ids = [self.filmsTable.item(i, 1).text() for i in rows]
+        if not ids:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Warning)
+            msg.setText("Выберите что-нибудь!")
+            msg.setWindowTitle("Уведомление")
+            msg.exec_()
+            return
+
+        else:
+            try:
+                result = []
+                connection = pymysql.connect(
+                    host='185.221.213.34',
+                    port=3306,
+                    user='predprof',
+                    password='Xz28]~w&V$weNQ%',
+                    database='interpret',
+                    cursorclass=pymysql.cursors.DictCursor
+                )
+
+                with connection.cursor() as cursor:
+                    insert_query = f'''SELECT `txt` FROM `data` WHERE `time` = '{''.join(ids)}';'''
+                    cursor.execute(insert_query)
+                    res = cursor.fetchall()
+                    print('удалена')
+
+                for i in res:
+                    res = list(i.values())
+                    result.append(res[0])
+
+                skript = result
+                print(skript)
+
+                connection.close()
+                cursor.close()
+                self.up_f()
+
+                self.close()
+                w.set_skript()
+
+            except Exception as e:
+                print(e)
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Проверьте интернет соединение!")
+                msg.setWindowTitle("Ошибка подключения к БД")
+                msg.exec_()
 
     def exit(self):
         self.close()
@@ -281,7 +339,7 @@ class GameWidget(QMainWindow):
         self.button_open_db.setGeometry(420, 5, 200, 40)
 
         self.button_save_db = QtWidgets.QPushButton(self)
-        self.button_save_db.setText("Сохранить в бд")
+        self.button_save_db.setText("Сохранить бд")
         self.button_save_db.setGeometry(630, 5, 200, 40)
 
         self.button_start = QtWidgets.QPushButton(self)
@@ -334,6 +392,9 @@ class GameWidget(QMainWindow):
 
         print(filename)
 
+    def set_skript(self):
+        self.textEdit1.setPlainText(''.join(skript))
+
     def button_open_db_click(self):
         print("button_open_db")
         self.window2 = DB()
@@ -341,29 +402,12 @@ class GameWidget(QMainWindow):
         self.window2.show()
 
     def button_save_db_click(self):
+        global a
         print("button_save_db")
+        a = self.textEdit1.toPlainText().strip()
         self.window2 = SaveDB()
         self.window2.setWindowTitle("Введите название файла")
         self.window2.show()
-        #
-        # connection = pymysql.connect(
-        #     host='185.221.213.34',
-        #     port=3306,
-        #     user='predprof',
-        #     password='Xz28]~w&V$weNQ%',
-        #     database='interpret',
-        #     cursorclass=pymysql.cursors.DictCursor
-        # )
-        # a = self.textEdit1.toPlainText().strip()
-        #
-        # with connection.cursor() as cursor:
-        #     insert_query = f'''INSERT INTO `data`(`file`, `time`, `txt`) VALUES ({'[value-1]'},{'[value-2]'},{'[value-3]'});'''
-        #     cursor.execute(insert_query)
-        #     connection.commit()
-        #     print('добавлено')
-        #
-        # connection.close()
-        # cursor.close()
 
     def button_start_click(self):
         print("button_start")
