@@ -8,6 +8,8 @@ from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel, QPushBut
     QMessageBox, QMainWindow, QTableWidget, QDialog
 from PyQt5.QtCore import QTimer, QRect, QCoreApplication, QMetaObject
 from PyQt5.QtGui import QImage, QPainter, QPixmap, QColor
+from PyQt5 import QtGui, QtCore
+
 from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox
 from src.parser import parser
 a = ''
@@ -348,12 +350,15 @@ class GameWidget(QMainWindow):
         self.button_save_db.setGeometry(630, 5, 200, 40)
 
         self.button_start = QtWidgets.QPushButton(self)
-        self.button_start.setText("Старт")
-        self.button_start.setGeometry(Constants.w - 220 - 50, 5, 100, 40)
+        # self.button_start.setText("Старт")
+        self.button_start.setIcon(QtGui.QIcon('play.png'))
+        self.button_start.setGeometry(Constants.w - 100 - 60, 5, 50, 40)
 
         self.button_stop = QtWidgets.QPushButton(self)
-        self.button_stop.setText("Стоп")
-        self.button_stop.setGeometry(Constants.w - 110 - 50, 5, 100, 40)
+        # self.button_stop.setText("Стоп")
+        self.button_stop.setIcon(QtGui.QIcon('stop.jpg'))
+
+        self.button_stop.setGeometry(Constants.w - 100 - 5, 5, 50, 40)
 
         self.button_open_local.clicked.connect(self.button_open_local_click)
         self.button_save_local.clicked.connect(self.button_save_local_click)
