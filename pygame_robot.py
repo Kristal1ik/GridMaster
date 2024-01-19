@@ -326,6 +326,7 @@ class Game():
                 if str(ERROR) == 'list index out of range':
                     ERROR = 'Обнаружены синтаксические ошибки'
                 print(ERROR, 7)
+
                 self.flag = False
                 w.error()
 
