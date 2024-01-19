@@ -233,11 +233,17 @@ class Game():
         self.left = 6
         self.top = 6
         self.cell_size = 28
-        self.coords1 = parser('temp.txt')
+
+        try:
+            self.coords1 = parser('temp.txt')
+        except FileNotFoundError:
+            with open('temp.txt', 'wt', encoding='utf8') as f:
+                print('', file=f)
+            self.coords1 = parser('temp.txt')
+        
         self.coords2 = []
 
         for i in self.coords1:
-            print(i)
             x = i[0]
             y = i[1]
             self.coords2.append([x * 28 + 300, -y * 28 + 300])
@@ -245,7 +251,6 @@ class Game():
     def r_l_f_b(self, h):
         self.x = round(self.x, 2)
         self.y = round(self.y, 2)
-        print(self.x, self.y)
 
         if h[0] != self.x:
             try:
