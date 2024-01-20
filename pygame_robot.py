@@ -407,10 +407,16 @@ class GameWidget(QMainWindow):
                                                          "Выбрать файл",
                                                          ".",
                                                          "Text Files(*.txt)")
-        print(filename)
-
-        with open(filename, encoding='utf8') as f:
-            self.textEdit1.setPlainText(''.join(f.readlines()))
+        print(filename, 99)
+        if filename:
+            with open(filename, encoding='utf8') as f:
+                self.textEdit1.setPlainText(''.join(f.readlines()))
+        else:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setText("Файл не выбран!")
+            msg.setWindowTitle("Уведомление")
+            msg.exec_()
 
     def button_save_local_click(self):
         print("button_save_local")
@@ -418,12 +424,18 @@ class GameWidget(QMainWindow):
                                                    "Сохранить файл",
                                                    ".",
                                                    "Text Files(*.txt)")
-
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Information)
-        msg.setText("Файл <br><b>{}</b> <br> успешно сохранён!".format(filename.split('/')[-1]))
-        msg.setWindowTitle("Уведомление")
-        msg.exec_()
+        if filename:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setText("Файл <br><b>{}</b> <br> успешно сохранён!".format(filename.split('/')[-1]))
+            msg.setWindowTitle("Уведомление")
+            msg.exec_()
+        else:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setText("Имя файла не указано!")
+            msg.setWindowTitle("Уведомление")
+            msg.exec_()
 
         print(filename)
 
