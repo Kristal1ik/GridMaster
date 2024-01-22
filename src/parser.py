@@ -1,5 +1,5 @@
 import re
-from interpreter import Interpreter
+from src.interpreter import Interpreter
 
 
 def parser(filename):
@@ -30,8 +30,12 @@ def parser(filename):
     coords = []
     while last is not None:
         coords.append(last)
-        last = interpreter.next()
-    return coords
+        try:
+            last = interpreter.next()
+        except Exception as e:
+            return (e, coords)
+
+    return (None, coords)
 
 
 if __name__ == '__main__':
