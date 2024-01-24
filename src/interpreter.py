@@ -88,14 +88,14 @@ class Interpreter:
                 procStart = True
             if line[0] == "ENDPROC":
                 procStart = False
-            if line[0] == "IF":
+            if line[0] == "IFBLOCK":
                 ifStart = [True, idx]
             if line[0] == "ENDIF":
                 if not ifStart[0]:
                     raise Exception(f"ENDIF без IF на строке {idx}")
                 self.ifMap[ifStart[1]] = idx
                 ifStart = [False, 0]
-            if line[0] == "REAPEAT":
+            if line[0] == "REPEAT":
                 repeatStart = True
             if line[0] == "ENDREPEAT":
                 repeatStart = False
@@ -121,7 +121,7 @@ class Interpreter:
                         f"""Неверный тип аргумента 'расстояние' ожидается int, найдено"
 {type(args[0])} на строке {self.currentLine}!""")
                 if not (0 <= self.get_value(args[0]) <= 1000):
-                    raise Exception(f"Неверное значение аргумента на строке {self.currentLine}!")
+                    raise Exception(f"Неверное значение аргумента на строке {self.currentLine + 1}!")
                 Actions.move(self, token, self.get_value(args[0]))
                 if self.x < -10 or self.x > 10 or self.y < -10 or self.y > 10:
                     raise Exception("Исполнитель вышел за пределы поля!")
@@ -146,13 +146,11 @@ class Interpreter:
                 if type(val) != int:
                     raise Exception(
                         f"""Неверный аргумент 'количество итерраций', найдено"
-                {type(args[0])} на строке {self.currentLine}!""")
+                {type(args[0])} на строке {self.currentLine + 1}!""")
+                if not (0 <= val <= 1000):
+                    raise Exception(f"Неверное значение аргумента на строке {self.currentLine + 1}!")
                 if val == 0:
-
-                    while self.code[self.currentLine][0] != "ENDREPEAT" and self.code[self.currentLine][0] != "ENDPROG":
-                        self.currentLine += 1
-                    self.currentLine += 1
-                    return self.next()
+                    raise Exception(f"Бесконечный цикл на строке {self.currentLine + 1}")
                 if len(self.stack) > 2:
                     raise Exception(f"Слишком большая степень вложенности!")
                 self.stack.append(["STARTFOR", self.currentLine + 1, val - 1])
@@ -175,7 +173,7 @@ class Interpreter:
                 if type(self.get_value(args[1])) != int:
                     raise Exception(
                         f"""Неверный тип аргумента 'значение' ожидается int, найдено"
-                {type(args[1])} на строке {self.currentLine}!""")
+                {type(args[1])} на строке {self.currentLine + 1}!""")
 
                 self.variables[args[0]] = self.get_value(args[1])
                 self.currentLine += 1
@@ -193,7 +191,7 @@ class Interpreter:
                 return self.next()
             case "CALL":
                 if args[0] not in self.funcMap:
-                    raise Exception(f"Использование необъявленной функции {args[0]} на строке {self.currentLine}")
+                    raise Exception(f"Использование необъявленной функции {args[0]} на строке {self.currentLine + 1}")
                 if len(self.stack) > 2:
                     raise Exception(f"Слишком большая степень вложенности!")
                 self.stack.append(["STARTPROC", self.currentLine + 1])
@@ -202,7 +200,7 @@ class Interpreter:
             case "ENDPROG":
                 return None
             case _:
-                raise Exception(f"Неизвестный токен {token} на строке {self.currentLine}!")
+                raise Exception(f"Неизвестный токен {token} на строке {self.currentLine + 1}!")
         self.currentLine += 1
         return [self.x, self.y]
 
