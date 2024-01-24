@@ -5,8 +5,8 @@ import pymysql
 from PyQt5 import QtWidgets
 
 from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel, QPushButton, QFrame, QTextEdit, QFileDialog, \
-    QMessageBox, QMainWindow, QTableWidget, QDialog
-from PyQt5.QtCore import QTimer, QRect, QCoreApplication, QMetaObject
+    QMessageBox, QMainWindow, QTableWidget, QDialog, QAbstractItemView
+from PyQt5.QtCore import QTimer, QRect, QCoreApplication, QMetaObject, Qt
 from PyQt5.QtGui import QImage, QPainter, QPixmap, QColor
 from PyQt5 import QtGui, QtCore
 
@@ -20,6 +20,20 @@ class Constants:
     w = 1600
     h = 900
     peach = (255, 228, 196)
+    names = ["RIGHT N", "LEFT N", "UP N", "DOWN N", "IFBLOCK DIR", "ENDIF", "REPEAT N",
+             "ENDREPE AT", "SET X = N", "PROCEDU RE NAME", "ENDPROC", "CALL NAME"]
+    descriptions = ["Переместить исполнителя на N клеток вправо.",
+                    "Переместить исполнителя на N клеток влево.",
+                    "Переместить исполнителя на N клеток вверх.",
+                    "Переместить исполнителя на N клеток вниз.",
+                    "Проверить препятствие в направлении DIR (RIGHT, LEFT, UP, DOWN). Препятствием являются края сетки. Если есть препятствие, выполнить следующие команды до ENDIF.",
+                    "Завершить блок команд после IFBLOCK DIR.",
+                    "Повторить следующую команду (или блок команд до ENDREPEAT) N раз.",
+                    "Завершить блок команд после REPEAT N.",
+                    "Задать значение переменной X равным N.",
+                    "Начать определение процедуры* с заданным именем.",
+                    "Завершить определение процедуры.",
+                    "Вызвать ранее определенную процедуру по имени."]
 
 
 class Ui_Form_SaveDB(object):
@@ -398,6 +412,36 @@ class GameWidget(QMainWindow):
 
         self.textEdit1 = QTextEdit(self)
         self.textEdit1.setGeometry(0, 50, Constants.w // 2 + 150, Constants.h - 50)
+
+
+        self.table = QTableWidget(self)
+        self.table.setColumnCount(2)
+        self.table.setRowCount(13)
+        self.table.setGeometry(QRect(Constants.w // 2 + 150, 50, Constants.w - (Constants.w // 2 + 200), Constants.h // 2 - 200))
+        #
+        # # Set the table headers
+        self.table.setHorizontalHeaderLabels(["Команды", "Описание"])
+        #
+        # # Set the tooltips to headings
+
+        self.table.setItem(0, 0, QTableWidgetItem("RIGHT N"))
+
+        print(len(Constants.names), len(Constants.descriptions))
+
+
+        #
+        # # Set the alignment to the headers
+        # self.table.horizontalHeaderItem(0).setTextAlignment(Qt.AlignLeft)
+        # self.table.horizontalHeaderItem(1).setTextAlignment(Qt.AlignHCenter)
+        #
+        # # Fill the first line
+        # self.table.setItem(0, 0, QTableWidgetItem("Text in column 1"))
+        # self.table.setItem(0, 1, QTableWidgetItem("Text in column 2"))
+        #
+        # # Do the resize of the columns by content
+        # self.table.resizeColumnsToContents()
+        # self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
 
         self.rect()
 
