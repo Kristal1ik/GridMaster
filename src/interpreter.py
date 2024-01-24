@@ -120,6 +120,8 @@ class Interpreter:
                     raise Exception(
                         f"""Неверный тип аргумента 'расстояние' ожидается int, найдено"
 {type(args[0])} на строке {self.currentLine}!""")
+                if not (0 <= self.get_value(args[0]) <= 1000):
+                    raise Exception(f"Неверное значение аргумента на строке {self.currentLine}!")
                 Actions.move(self, token, self.get_value(args[0]))
                 if self.x < -10 or self.x > 10 or self.y < -10 or self.y > 10:
                     raise Exception("Исполнитель вышел за пределы поля!")
@@ -129,6 +131,8 @@ class Interpreter:
                     self.currentLine += 1
                 else:
                     self.currentLine += 1
+                    if len(self.stack) > 2:
+                        raise Exception(f"Слишком большая степень вложенности!")
                     self.stack.append(["IFSTART", self.currentLine])
                 return self.next()
             case "ENDIF":
@@ -149,6 +153,8 @@ class Interpreter:
                         self.currentLine += 1
                     self.currentLine += 1
                     return self.next()
+                if len(self.stack) > 2:
+                    raise Exception(f"Слишком большая степень вложенности!")
                 self.stack.append(["STARTFOR", self.currentLine + 1, val - 1])
                 self.currentLine += 1
                 return self.next()
@@ -188,6 +194,8 @@ class Interpreter:
             case "CALL":
                 if args[0] not in self.funcMap:
                     raise Exception(f"Использование необъявленной функции {args[0]} на строке {self.currentLine}")
+                if len(self.stack) > 2:
+                    raise Exception(f"Слишком большая степень вложенности!")
                 self.stack.append(["STARTPROC", self.currentLine + 1])
                 self.currentLine = self.funcMap[args[0]] + 1
                 return self.next()
