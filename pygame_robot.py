@@ -389,7 +389,7 @@ class GameWidget(QMainWindow):
         self.button_open_db.setGeometry(420, 5, 200, 40)
 
         self.button_save_db = QtWidgets.QPushButton(self)
-        self.button_save_db.setText("Сохранить бд")
+        self.button_save_db.setText("Сохранить в бд")
         self.button_save_db.setGeometry(630, 5, 200, 40)
 
         self.button_start = QtWidgets.QPushButton(self)
@@ -415,10 +415,12 @@ class GameWidget(QMainWindow):
         self.timer.start(1)
 
         self.textEdit1 = QTextEdit(self)
+        # self.textEdit1.setFont(QtGui.QFont("DejaVuSansMono.ttf", 8))
         self.textEdit1.setGeometry(0, 50, Constants.w // 2 + 150, Constants.h - 50)
 
 
         self.table = QTableWidget(self)
+        self.table.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         self.table.setColumnCount(2)
         self.table.setRowCount(12)
         self.table.setGeometry(QRect(Constants.w // 2 + 150, 50, Constants.w - (Constants.w // 2 + 200), Constants.h // 2 - 200))
