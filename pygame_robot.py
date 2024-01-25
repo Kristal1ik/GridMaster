@@ -5,7 +5,7 @@ import pymysql
 from PyQt5 import QtWidgets
 
 from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel, QPushButton, QFrame, QTextEdit, QFileDialog, \
-    QMessageBox, QMainWindow, QTableWidget, QDialog, QAbstractItemView
+    QMessageBox, QMainWindow, QTableWidget, QDialog, QAbstractItemView, QHeaderView
 from PyQt5.QtCore import QTimer, QRect, QCoreApplication, QMetaObject, Qt
 from PyQt5.QtGui import QImage, QPainter, QPixmap, QColor
 from PyQt5 import QtGui, QtCore
@@ -22,10 +22,14 @@ class Constants:
     peach = (255, 228, 196)
     names = ["RIGHT N", "LEFT N", "UP N", "DOWN N", "IFBLOCK DIR", "ENDIF", "REPEAT N",
              "ENDREPE AT", "SET X = N", "PROCEDU RE NAME", "ENDPROC", "CALL NAME"]
-    descriptions = ["Переместить исполнителя на N клеток вправо.",
-                    "Переместить исполнителя на N клеток влево.",
-                    "Переместить исполнителя на N клеток вверх.",
-                    "Переместить исполнителя на N клеток вниз.",
+    descriptions = ["Переместить исполнителя на \n"
+                    "N клеток вправо.",
+                    "Переместить исполнителя на "
+                    "N клеток влево.",
+                    "Переместить исполнителя на "
+                    "N клеток вверх.",
+                    "Переместить исполнителя на "
+                    "N клеток вниз.",
                     "Проверить препятствие в направлении DIR (RIGHT, LEFT, UP, DOWN). Препятствием являются края сетки. Если есть препятствие, выполнить следующие команды до ENDIF.",
                     "Завершить блок команд после IFBLOCK DIR.",
                     "Повторить следующую команду (или блок команд до ENDREPEAT) N раз.",
@@ -416,15 +420,22 @@ class GameWidget(QMainWindow):
 
         self.table = QTableWidget(self)
         self.table.setColumnCount(2)
-        self.table.setRowCount(13)
+        self.table.setRowCount(12)
         self.table.setGeometry(QRect(Constants.w // 2 + 150, 50, Constants.w - (Constants.w // 2 + 200), Constants.h // 2 - 200))
         #
         # # Set the table headers
-        self.table.setHorizontalHeaderLabels(["Команды", "Описание"])
-        #
-        # # Set the tooltips to headings
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-        self.table.setItem(0, 0, QTableWidgetItem("RIGHT N"))
+        self.table.setHorizontalHeaderLabels(["Команды", "Описание"])
+        self.table.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
+        # # Set the tooltips to headings
+        for i in range(len(Constants.names)):
+            for j in range(2):
+                if j == 0:
+                    self.table.setItem(i, j, QTableWidgetItem(Constants.names[i]))
+                else:
+                    self.table.setItem(i, j, QTableWidgetItem(Constants.descriptions[i]))
+
 
         print(len(Constants.names), len(Constants.descriptions))
 
