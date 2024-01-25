@@ -125,7 +125,7 @@ class Interpreter:
                 Actions.move(self, token, self.get_value(args[0]))
                 if self.x < -10 or self.x > 10 or self.y < -10 or self.y > 10:
                     raise Exception("Исполнитель вышел за пределы поля!")
-            case "IF":
+            case "IFBLOCK":
                 if not Actions.checkIf(self, args[0]):
                     self.currentLine = self.ifMap[self.currentLine]
                     self.currentLine += 1
