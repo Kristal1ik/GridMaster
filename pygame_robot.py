@@ -5,7 +5,7 @@ import pymysql
 from PyQt5 import QtWidgets
 
 from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel, QPushButton, QFrame, QTextEdit, QFileDialog, \
-    QMessageBox, QMainWindow, QTableWidget, QDialog, QAbstractItemView
+    QMessageBox, QMainWindow, QTableWidget, QDialog, QAbstractItemView, QHeaderView
 from PyQt5.QtCore import QTimer, QRect, QCoreApplication, QMetaObject, Qt
 from PyQt5.QtGui import QImage, QPainter, QPixmap, QColor
 from PyQt5 import QtGui, QtCore
@@ -22,10 +22,14 @@ class Constants:
     peach = (255, 228, 196)
     names = ["RIGHT N", "LEFT N", "UP N", "DOWN N", "IFBLOCK DIR", "ENDIF", "REPEAT N",
              "ENDREPE AT", "SET X = N", "PROCEDU RE NAME", "ENDPROC", "CALL NAME"]
-    descriptions = ["Переместить исполнителя на N клеток вправо.",
-                    "Переместить исполнителя на N клеток влево.",
-                    "Переместить исполнителя на N клеток вверх.",
-                    "Переместить исполнителя на N клеток вниз.",
+    descriptions = ["Переместить исполнителя на \n"
+                    "N клеток вправо.",
+                    "Переместить исполнителя на "
+                    "N клеток влево.",
+                    "Переместить исполнителя на "
+                    "N клеток вверх.",
+                    "Переместить исполнителя на "
+                    "N клеток вниз.",
                     "Проверить препятствие в направлении DIR (RIGHT, LEFT, UP, DOWN). Препятствием являются края сетки. Если есть препятствие, выполнить следующие команды до ENDIF.",
                     "Завершить блок команд после IFBLOCK DIR.",
                     "Повторить следующую команду (или блок команд до ENDREPEAT) N раз.",
@@ -73,11 +77,36 @@ class Ui_Form_SaveDB(object):
             )
             print(a)
 
-            with connection.cursor() as cursor:
-                insert_query = f'''INSERT INTO `data`(`file`, `time`, `txt`) VALUES ('{self.input.toPlainText()}','{datetime.datetime.now().strftime("%d.%m.%Y %H:%M")}','{a}');'''
-                cursor.execute(insert_query)
-                connection.commit()
-                print('добавлено')
+            with open('temp.txt', 'wt', encoding='utf8') as f:
+                print(a.strip(), file=f)
+
+            try:
+                temp = parser('temp.txt')
+                self.coords1 = temp[1]
+
+            except FileNotFoundError:
+                with open('temp.txt', 'wt', encoding='utf8') as f:
+                    print('', file=f)
+                self.coords1 = parser('temp.txt')[1]
+
+            except Exception as e:
+                with open('temp.txt', 'wt', encoding='utf8') as f:
+                    print('', file=f)
+                self.coords1 = parser('temp.txt')[1]
+
+            print(self.coords1, 999999999999999)
+            if len(self.coords1) == 0:
+                with connection.cursor() as cursor:
+                    insert_query = f'''INSERT INTO `data`(`file`, `time`, `coords`, `txt`) VALUES ('{self.input.toPlainText()}','{datetime.datetime.now().strftime("%d.%m.%Y %H:%M")}','Ошибка в коде','{a}');'''
+                    cursor.execute(insert_query)
+                    connection.commit()
+                    print('добавлено')
+            else:
+                with connection.cursor() as cursor:
+                    insert_query = f'''INSERT INTO `data`(`file`, `time`, `coords`, `txt`) VALUES ('{self.input.toPlainText()}','{datetime.datetime.now().strftime("%d.%m.%Y %H:%M")}','{self.coords1}','{a}');'''
+                    cursor.execute(insert_query)
+                    connection.commit()
+                    print('добавлено')
 
             connection.close()
             cursor.close()
@@ -114,6 +143,7 @@ class Ui_Form(object):
         self.deleteFilmButton.setObjectName(u"deleteFilmButton")
         self.deleteFilmButton.setGeometry(QRect(10, 330, 651, 51))
         self.filmsTable = QTableWidget(Form)
+        self.filmsTable.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         self.filmsTable.setObjectName(u"filmsTable")
         self.filmsTable.setGeometry(QRect(10, 0, 651, 321))
 
@@ -169,7 +199,7 @@ class DB(QDialog, Ui_Form):  # Вот тут основное окно
         self.filmsTable.setRowCount(len(result))
         self.filmsTable.setColumnCount(len(result[0]))
         self.filmsTable.setHorizontalHeaderLabels(
-            ['Название файла', 'Дата сохранения'])
+            ['Название файла', 'Дата сохранения', 'Координаты'])
 
         for i, elem in enumerate(result):
             for j, val in enumerate(elem):
@@ -231,6 +261,129 @@ class DB(QDialog, Ui_Form):  # Вот тут основное окно
         self.close()
 
 
+class Ui_Form2(object):
+    def setupUi(self, Form):
+        if not Form.objectName():
+            Form.setObjectName(u"Form")
+        Form.resize(669, 385)
+        self.deleteFilmButton = QPushButton(Form)
+        self.deleteFilmButton.setObjectName(u"deleteFilmButton")
+        self.deleteFilmButton.setGeometry(QRect(10, 330, 651, 51))
+        self.filmsTable = QTableWidget(Form)
+        self.filmsTable.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
+        self.filmsTable.setObjectName(u"filmsTable")
+        self.filmsTable.setGeometry(QRect(10, 0, 651, 321))
+
+        self.retranslateUi(Form)
+
+        QMetaObject.connectSlotsByName(Form)
+    # setupUi
+
+    def retranslateUi(self, Form):
+        Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
+        self.deleteFilmButton.setText(QCoreApplication.translate("Form", u"\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0444\u0430\u0439\u043b", None))
+    # retranslateUi
+
+class DEL_DB(QDialog, Ui_Form2):  # Вот тут основное окно
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+        self.up_f()
+        self.deleteFilmButton.clicked.connect(self.df)
+        self.dialogs = []
+        # self.exitAction.triggered.connect(self.exit)
+
+    def up_f(self):
+        try:
+            result = []
+            connection = pymysql.connect(
+                host='185.221.213.34',
+                port=3306,
+                user='predprof',
+                password='Xz28]~w&V$weNQ%',
+                database='interpret',
+                cursorclass=pymysql.cursors.DictCursor
+            )
+
+            with connection.cursor() as cursor:
+                select_all_rows = "SELECT * FROM `data`"
+                cursor.execute(select_all_rows)
+                res = cursor.fetchall()
+            connection.close()
+            cursor.close()
+        except:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Проверьте интернет соединение!")
+            msg.setWindowTitle("Ошибка подключения к БД")
+            msg.exec_()
+
+        for i in res:
+            res = list(i.values())
+            result.append(res[:-1])
+        print(result)
+
+        self.filmsTable.setRowCount(len(result))
+        self.filmsTable.setColumnCount(len(result[0]))
+        self.filmsTable.setHorizontalHeaderLabels(
+            ['Название файла', 'Дата сохранения', 'Координаты'])
+
+        for i, elem in enumerate(result):
+            for j, val in enumerate(elem):
+                self.filmsTable.setItem(i, j, QTableWidgetItem(str(val)))
+
+    def df(self):
+        rows = list(set([i.row() for i in self.filmsTable.selectedItems()]))
+        ids = [self.filmsTable.item(i, 1).text() for i in rows]
+        if not ids:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Warning)
+            msg.setText("Выберите что-нибудь!")
+            msg.setWindowTitle("Уведомление")
+            msg.exec_()
+            return
+
+        else:
+            try:
+                connection = pymysql.connect(
+                    host='185.221.213.34',
+                    port=3306,
+                    user='predprof',
+                    password='Xz28]~w&V$weNQ%',
+                    database='interpret',
+                    cursorclass=pymysql.cursors.DictCursor
+                )
+
+                with connection.cursor() as cursor:
+                    insert_query = f'''DELETE FROM `data` WHERE `time` = '{''.join(ids)}';'''
+                    cursor.execute(insert_query)
+                    connection.commit()
+                    print('удалена')
+
+                connection.close()
+                cursor.close()
+
+                self.up_f()
+                self.close()
+
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Information)
+                msg.setText("Файл удалён!")
+                msg.setWindowTitle("Уведомление")
+                msg.exec_()
+
+            except Exception as e:
+                print(e)
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Проверьте интернет соединение!")
+                msg.setWindowTitle("Ошибка подключения к БД")
+                msg.exec_()
+
+    def exit(self):
+        self.close()
+
+
 class Game():
     def __init__(self):
         global ERROR
@@ -273,6 +426,8 @@ class Game():
             self.coords1 = parser('temp.txt')[1]
 
         self.coords2 = []
+
+        print(self.coords1)
 
         for i in self.coords1:
             x = i[0]
@@ -374,19 +529,23 @@ class GameWidget(QMainWindow):
 
         self.button_open_local = QtWidgets.QPushButton(self)
         self.button_open_local.setText("Открыть локально")
-        self.button_open_local.setGeometry(5, 5, 200, 40)
+        self.button_open_local.setGeometry(5, 5, 185, 40)
 
         self.button_save_local = QtWidgets.QPushButton(self)
         self.button_save_local.setText("Сохранить локально")
-        self.button_save_local.setGeometry(210, 5, 200, 40)
+        self.button_save_local.setGeometry(192, 5, 185, 40)
 
         self.button_open_db = QtWidgets.QPushButton(self)
         self.button_open_db.setText("Открыть из бд")
-        self.button_open_db.setGeometry(420, 5, 200, 40)
+        self.button_open_db.setGeometry(391, 5, 185, 40)
 
         self.button_save_db = QtWidgets.QPushButton(self)
-        self.button_save_db.setText("Сохранить бд")
-        self.button_save_db.setGeometry(630, 5, 200, 40)
+        self.button_save_db.setText("Сохранить в бд")
+        self.button_save_db.setGeometry(578, 5, 185, 40)
+
+        self.button_del_db = QtWidgets.QPushButton(self)
+        self.button_del_db.setText("Удалить из бд")
+        self.button_del_db.setGeometry(765, 5, 185, 40)
 
         self.button_start = QtWidgets.QPushButton(self)
         # self.button_start.setText("Старт")
@@ -405,26 +564,36 @@ class GameWidget(QMainWindow):
         self.button_save_db.clicked.connect(self.button_save_db_click)
         self.button_start.clicked.connect(self.button_start_click)
         self.button_stop.clicked.connect(self.button_stop_click)
+        self.button_del_db.clicked.connect(self.button_del_db_click)
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.pygame_loop)
         self.timer.start(1)
 
         self.textEdit1 = QTextEdit(self)
+        # self.textEdit1.setFont(QtGui.QFont("DejaVuSansMono.ttf", 8))
         self.textEdit1.setGeometry(0, 50, Constants.w // 2 + 150, Constants.h - 50)
 
 
         self.table = QTableWidget(self)
+        self.table.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         self.table.setColumnCount(2)
-        self.table.setRowCount(13)
+        self.table.setRowCount(12)
         self.table.setGeometry(QRect(Constants.w // 2 + 150, 50, Constants.w - (Constants.w // 2 + 200), Constants.h // 2 - 200))
         #
         # # Set the table headers
-        self.table.setHorizontalHeaderLabels(["Команды", "Описание"])
-        #
-        # # Set the tooltips to headings
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-        self.table.setItem(0, 0, QTableWidgetItem("RIGHT N"))
+        self.table.setHorizontalHeaderLabels(["Команды", "Описание"])
+        self.table.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
+        # # Set the tooltips to headings
+        for i in range(len(Constants.names)):
+            for j in range(2):
+                if j == 0:
+                    self.table.setItem(i, j, QTableWidgetItem(Constants.names[i]))
+                else:
+                    self.table.setItem(i, j, QTableWidgetItem(Constants.descriptions[i]))
+
 
         print(len(Constants.names), len(Constants.descriptions))
 
@@ -499,6 +668,12 @@ class GameWidget(QMainWindow):
         self.window2 = DB()
         self.window2.setWindowTitle("Выберите файл из БД")
         self.window2.show()
+
+    def button_del_db_click(self):
+        print("button_del_db")
+        self.window3 = DEL_DB()
+        self.window3.setWindowTitle("Выберите файл из БД")
+        self.window3.show()
 
     def button_save_db_click(self):
         global a
