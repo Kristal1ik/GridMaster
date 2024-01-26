@@ -84,6 +84,8 @@ class Interpreter:
                     raise Exception(f"Объявление процедуры внутри блока IF")
                 if repeatStart:
                     raise Exception(f"Объявление процедуры внутри блока REPEAT")
+                if line[1] in self.funcMap:
+                    raise Exception(f"Объявление процедуры с уже использованным именем")
                 self.funcMap[line[1]] = idx
                 procStart = True
             if line[0] == "ENDPROC":
