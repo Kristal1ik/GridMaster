@@ -728,6 +728,7 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv[1:])
     w = GameWidget()
+    w.setWindowTitle("GridMaster — Те самые из 1532")
     w.resize(Constants.w - 50, Constants.h)
     w.show()
     sys.exit(app.exec_())
