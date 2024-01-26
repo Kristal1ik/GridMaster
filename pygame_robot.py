@@ -638,6 +638,10 @@ class GameWidget(QMainWindow):
                                                    ".",
                                                    "Text Files(*.txt)")
         if filename:
+            with open(filename, "w") as file:
+                file.write(self.textEdit1.toPlainText())
+                file.close()
+
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Information)
             msg.setText("Файл <br><b>{}</b> <br> успешно сохранён!".format(filename.split('/')[-1]))
