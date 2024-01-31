@@ -415,14 +415,17 @@ class Game():
                 ERROR = None
         except FileNotFoundError:
             with open('temp.txt', 'wt', encoding='utf8') as f:
-                print('', file=f)
+                # print('', file=f)
+                pass
             self.coords1 = parser('temp.txt')[1]
 
         except Exception as e:
             print(e)
             ERROR = e
             with open('temp.txt', 'wt', encoding='utf8') as f:
-                print('', file=f)
+                # print('', file=f)
+                pass
+
             self.coords1 = parser('temp.txt')[1]
 
         self.coords2 = []
