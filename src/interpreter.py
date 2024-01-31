@@ -74,38 +74,34 @@ class Interpreter:
         self.stack = []
 
     def load(self, lines):
-        ifStart = [False, 0]
-        procStart = False
-        repeatStart = False
-        endChecker = []
+        stack = []
         for idx, line in enumerate(lines):
             if line[0] == "PROCEDURE":
-                if ifStart[0]:
-                    raise Exception(f"Объявление процедуры внутри блока IF")
-                if repeatStart:
-                    raise Exception(f"Объявление процедуры внутри блока REPEAT")
-                if line[1] in self.funcMap:
-                    raise Exception(f"Объявление процедуры с уже использованным именем")
+                if len(stack) != 0:
+                    raise Exception(f"Объявление процедуры внутри блока {stack[-1]} на {idx}")
                 self.funcMap[line[1]] = idx
-                procStart = True
+                stack.append(("PROC", idx))
             if line[0] == "ENDPROC":
-                procStart = False
+                if stack[-1][0] != "PROC":
+                    raise Exception(f"Неожиданный ENDPROC на {idx}")
+                stack.pop()
             if line[0] == "IFBLOCK":
-                ifStart = [True, idx]
+                stack.append(("IF", idx))
             if line[0] == "ENDIF":
-                if not ifStart[0]:
-                    raise Exception(f"ENDIF без IF на строке {idx}")
-                self.ifMap[ifStart[1]] = idx
-                ifStart = [False, 0]
+                if stack[-1][0] != "IF":
+                    raise Exception(f"Неожиданный ENDIF на {idx}")
+                self.ifMap[stack[-1][1]] = idx
+                stack.pop()
             if line[0] == "REPEAT":
-                repeatStart = True
+                stack.append(("REPEAT", idx))
             if line[0] == "ENDREPEAT":
-                repeatStart = False
+                if stack[-1][0] != "REPEAT":
+                    raise Exception(f"Неожиданный ENDREPEAT на {idx}")
 
             self.code.append([line[0], *line[1:]])
         self.code.append(["ENDPROG"])
         self.code.append(["ENDPROG"])
-        if ifStart[0] or procStart or repeatStart:
+        if len(stack) != 0:
             raise Exception(f"Незакрытый блок IF, PROCEDURE или REPEAT")
         if __name__ == "__main__":
             print(self.code)
@@ -135,11 +131,11 @@ class Interpreter:
                     self.currentLine += 1
                     if len(self.stack) > 2:
                         raise Exception(f"Слишком большая степень вложенности!")
-                    self.stack.append(["IFSTART", self.currentLine])
+                    self.stack.append(["IFBLOCK", self.currentLine])
                 return self.next()
             case "ENDIF":
-                if self.stack[-1][0] != "IFSTART":
-                    raise Exception(f"ENDIF без соответствующего IF")
+                if self.stack[-1][0] != "IFBLOCK":
+                    raise Exception(f"ENDIF без соответствующего IFBLOCK")
                 self.stack.pop()
                 self.currentLine += 1
                 return self.next()

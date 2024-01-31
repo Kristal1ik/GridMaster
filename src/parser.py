@@ -11,9 +11,9 @@ def parser(filename):
         commands.append(list(filter(lambda com: com not in delete_com, (re.split(r'\s+', row)))))
     interpreter = Interpreter()
     interpreter.load(commands)
-    interpreter = Interpreter()
-    interpreter.load(commands)
     last = interpreter.next()
+    if last is None:
+        return None, []
     coords = []
     while last is not None:
         coords.append(last)
