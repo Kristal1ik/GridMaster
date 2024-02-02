@@ -1,0 +1,5 @@
+PROCEDURE MoveRight
+RIGHT 5
+ENDPROC
+
+CALL MoveRight
