@@ -12,6 +12,8 @@ def parser(filename):
     interpreter = Interpreter()
     interpreter.load(commands)
     last = interpreter.next()
+    if last is None:
+        return None, []
     coords = []
     while last is not None:
         coords.append(last)

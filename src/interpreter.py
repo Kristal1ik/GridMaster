@@ -74,39 +74,43 @@ class Interpreter:
         self.stack = []
 
     def load(self, lines):
-        ifStart = [False, 0]
-        procStart = False
-        repeatStart = False
-        endChecker = []
+        stack = []
         for idx, line in enumerate(lines):
             if line[0] == "PROCEDURE":
-                if ifStart[0]:
-                    raise Exception(f"Объявление процедуры внутри блока IF")
-                if repeatStart:
-                    raise Exception(f"Объявление процедуры внутри блока REPEAT")
+                if len(stack) != 0:
+                    raise Exception(f"Объявление процедуры внутри блока {stack[-1]} на {idx + 1}")
                 if line[1] in self.funcMap:
-                    raise Exception(f"Объявление процедуры с уже использованным именем")
+                    raise Exception(f"Повторное объявление процедуры {line[1]} на {idx + 1}")
                 self.funcMap[line[1]] = idx
-                procStart = True
+                stack.append(("PROCEDURE", idx))
             if line[0] == "ENDPROC":
-                procStart = False
+                if stack[-1][0] != "PROCEDURE":
+                    raise Exception(f"Неожиданный ENDPROC на {idx + 1}")
+                stack.pop()
             if line[0] == "IFBLOCK":
-                ifStart = [True, idx]
+                if len(stack) > 2:
+                    raise Exception(f"Слишком большая степень вложенности на {idx + 1}")
+                stack.append(("IFBLOCK", idx))
             if line[0] == "ENDIF":
-                if not ifStart[0]:
-                    raise Exception(f"ENDIF без IF на строке {idx}")
-                self.ifMap[ifStart[1]] = idx
-                ifStart = [False, 0]
+                if stack[-1][0] != "IFBLOCK":
+                    raise Exception(f"Неожиданный ENDIF на {idx + 1}")
+                self.ifMap[stack[-1][1]] = idx
+                stack.pop()
             if line[0] == "REPEAT":
-                repeatStart = True
+                if len(stack) > 2:
+                    raise Exception(f"Слишком большая степень вложенности на {idx + 1}")
+                stack.append(("REPEAT", idx))
             if line[0] == "ENDREPEAT":
-                repeatStart = False
+                if stack[-1][0] != "REPEAT":
+                    raise Exception(f"Неожиданный ENDREPEAT на {idx + 1}")
+                stack.pop()
+
 
             self.code.append([line[0], *line[1:]])
         self.code.append(["ENDPROG"])
         self.code.append(["ENDPROG"])
-        if ifStart[0] or procStart or repeatStart:
-            raise Exception(f"Незакрытый блок IF, PROCEDURE или REPEAT")
+        if len(stack) != 0:
+            raise Exception(f"Незакрытый блок IF, PROCEDURE или REPEAT на {stack[-1][1]}")
         if __name__ == "__main__":
             print(self.code)
             print(self.ifMap)
@@ -128,6 +132,8 @@ class Interpreter:
                 if self.x < -10 or self.x > 10 or self.y < -10 or self.y > 10:
                     raise Exception("Исполнитель вышел за пределы поля!")
             case "IFBLOCK":
+                if len(self.stack) > 2:
+                    raise Exception(f"Слишком большая степень вложенности!")
                 if not Actions.checkIf(self, args[0]):
                     self.currentLine = self.ifMap[self.currentLine]
                     self.currentLine += 1
@@ -135,11 +141,11 @@ class Interpreter:
                     self.currentLine += 1
                     if len(self.stack) > 2:
                         raise Exception(f"Слишком большая степень вложенности!")
-                    self.stack.append(["IFSTART", self.currentLine])
+                    self.stack.append(["IFBLOCK", self.currentLine])
                 return self.next()
             case "ENDIF":
-                if self.stack[-1][0] != "IFSTART":
-                    raise Exception(f"ENDIF без соответствующего IF")
+                if self.stack[-1][0] != "IFBLOCK":
+                    raise Exception(f"ENDIF без соответствующего IFBLOCK")
                 self.stack.pop()
                 self.currentLine += 1
                 return self.next()
@@ -214,7 +220,7 @@ class Interpreter:
         if type(val) == int:
             return val
         if val not in self.variables:
-            raise Exception(f"Использование необъявленной переменной {val} на {self.currentLine}")
+            raise Exception(f"Использование необъявленной переменной {val} на {self.currentLine + 1}")
         return self.variables[val]
 
 

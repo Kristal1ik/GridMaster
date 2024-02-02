@@ -184,26 +184,27 @@ class DB(QDialog, Ui_Form):  # Вот тут основное окно
                 res = cursor.fetchall()
             connection.close()
             cursor.close()
-        except:
+        except Exception as e:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
             msg.setText("Проверьте интернет соединение!")
             msg.setWindowTitle("Ошибка подключения к БД")
             msg.exec_()
 
-        for i in res:
-            res = list(i.values())
-            result.append(res[:-1])
-        print(result)
+        if result:
+            for i in res:
+                res = list(i.values())
+                result.append(res[:-1])
+            print(result)
 
-        self.filmsTable.setRowCount(len(result))
-        self.filmsTable.setColumnCount(len(result[0]))
-        self.filmsTable.setHorizontalHeaderLabels(
-            ['Название файла', 'Дата сохранения', 'Координаты'])
+            self.filmsTable.setRowCount(len(result))
+            self.filmsTable.setColumnCount(len(result[0]))
+            self.filmsTable.setHorizontalHeaderLabels(
+                ['Название файла', 'Дата сохранения', 'Координаты'])
 
-        for i, elem in enumerate(result):
-            for j, val in enumerate(elem):
-                self.filmsTable.setItem(i, j, QTableWidgetItem(str(val)))
+            for i, elem in enumerate(result):
+                for j, val in enumerate(elem):
+                    self.filmsTable.setItem(i, j, QTableWidgetItem(str(val)))
 
     def df(self):
         global skript
@@ -235,19 +236,20 @@ class DB(QDialog, Ui_Form):  # Вот тут основное окно
                     res = cursor.fetchall()
                     print('удалена')
 
-                for i in res:
-                    res = list(i.values())
-                    result.append(res[0])
+                if result:
+                    for i in res:
+                        res = list(i.values())
+                        result.append(res[0])
 
-                skript = result
-                print(skript)
+                    skript = result
+                    print(skript)
 
-                connection.close()
-                cursor.close()
-                self.up_f()
+                    connection.close()
+                    cursor.close()
+                    self.up_f()
 
-                self.close()
-                w.set_skript()
+                    self.close()
+                    w.set_skript()
 
             except Exception as e:
                 print(e)
@@ -311,6 +313,7 @@ class DEL_DB(QDialog, Ui_Form2):  # Вот тут основное окно
                 res = cursor.fetchall()
             connection.close()
             cursor.close()
+
         except:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
@@ -318,19 +321,20 @@ class DEL_DB(QDialog, Ui_Form2):  # Вот тут основное окно
             msg.setWindowTitle("Ошибка подключения к БД")
             msg.exec_()
 
-        for i in res:
-            res = list(i.values())
-            result.append(res[:-1])
-        print(result)
+        if result:
+            for i in res:
+                res = list(i.values())
+                result.append(res[:-1])
+            print(result)
 
-        self.filmsTable.setRowCount(len(result))
-        self.filmsTable.setColumnCount(len(result[0]))
-        self.filmsTable.setHorizontalHeaderLabels(
-            ['Название файла', 'Дата сохранения', 'Координаты'])
+            self.filmsTable.setRowCount(len(result))
+            self.filmsTable.setColumnCount(len(result[0]))
+            self.filmsTable.setHorizontalHeaderLabels(
+                ['Название файла', 'Дата сохранения', 'Координаты'])
 
-        for i, elem in enumerate(result):
-            for j, val in enumerate(elem):
-                self.filmsTable.setItem(i, j, QTableWidgetItem(str(val)))
+            for i, elem in enumerate(result):
+                for j, val in enumerate(elem):
+                    self.filmsTable.setItem(i, j, QTableWidgetItem(str(val)))
 
     def df(self):
         rows = list(set([i.row() for i in self.filmsTable.selectedItems()]))
@@ -415,17 +419,14 @@ class Game():
                 ERROR = None
         except FileNotFoundError:
             with open('temp.txt', 'wt', encoding='utf8') as f:
-                # print('', file=f)
-                pass
+                print('', file=f)
             self.coords1 = parser('temp.txt')[1]
 
         except Exception as e:
             print(e)
             ERROR = e
             with open('temp.txt', 'wt', encoding='utf8') as f:
-                # print('', file=f)
                 pass
-
             self.coords1 = parser('temp.txt')[1]
 
         self.coords2 = []
@@ -736,6 +737,8 @@ if __name__ == "__main__":
     app = QApplication(sys.argv[1:])
     w = GameWidget()
     w.setWindowTitle("GridMaster — Те самые из 1532")
+    w.setWindowIcon(QtGui.QIcon('icon.ico'))
+
     w.resize(Constants.w - 50, Constants.h)
     w.show()
     sys.exit(app.exec_())
