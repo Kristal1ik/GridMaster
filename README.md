@@ -10,7 +10,7 @@ GridMaster - это интерпретатор для выполнения ко�
 
 ## Установка и Запуск
 
-1. Скачайте архив с программой [GridMaster.zip](#https://drive.google.com/drive/folders/1QQeTI4cuKCvtdeR1eYdMvKgQ-sfM1x9J?usp=sharing).
+1. Скачайте архив с программой [GridMaster.zip](https://drive.google.com/drive/folders/1QQeTI4cuKCvtdeR1eYdMvKgQ-sfM1x9J?usp=sharing).
 
 2. Распакуйте архив в удобное для вас место.
 
